@@ -1,0 +1,10 @@
+id: missing_schema_pipeline
+version: 0.1.0
+providers:
+  - id: mock
+    type: mock
+channels:
+  - id: analyze
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    outputSchema: schemas/does-not-exist.schema.json

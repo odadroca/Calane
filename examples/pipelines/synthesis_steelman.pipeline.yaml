@@ -1,0 +1,23 @@
+id: synthesis_steelman
+name: SWOT with steelman synthesis
+version: 0.1.0
+description: SWOT strengths/weaknesses synthesized with the steelman variant.
+providers:
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: strengths
+    executionMode: direct_provider
+    prompt: prompts/swot/strengths.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: weaknesses
+    executionMode: direct_provider
+    prompt: prompts/swot/weaknesses.md
+    outputSchema: schemas/swot.channel.schema.json
+synthesis:
+  id: synthesis
+  variant: steelman
+  executionMode: direct_provider
+  prompt: prompts/synthesis/steelman.md
+  outputSchema: schemas/synthesis/steelman.synthesis.schema.json

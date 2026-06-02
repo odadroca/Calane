@@ -1,0 +1,59 @@
+# Render Blueprint for a SINGLE Calane instance (Phase 7 R4).
+#
+# This deploys ONE instance for ONE operator (single-tenant per CLAUDE.md §A1).
+# It is NOT a multi-tenant product: no per-user isolation, accounts, or billing.
+#
+# Secrets (provider keys, the API token, the IdP/OIDC config) are set in the
+# Render dashboard or via `sync: false` env vars — NEVER committed here. The
+# persistent disk holds the SQLite run store so runs survive redeploys.
+#
+# Docs: docs/deploy-render.md
+services:
+  - type: web
+    name: calane
+    runtime: node
+    plan: starter # a paid tier is required for a persistent disk
+    region: oregon
+    # Build the workspace, then the server starts via dist.
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    # The combined entrypoint serves BOTH the REST/OpenAPI/OAuth-discovery surface
+    # (Custom GPT path) and the MCP Streamable HTTP transport at /mcp (Claude
+    # connector path) in one process, against the one persistent disk.
+    startCommand: node packages/server/dist/combined.js
+    healthCheckPath: /health
+    autoDeploy: false
+    disk:
+      name: calane-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      # --- Runtime ---
+      - key: PORT
+        value: "8787"
+      - key: NODE_VERSION
+        value: "20"
+      # --- Persistent SQLite store on the mounted disk (survives redeploys) ---
+      - key: CALANE_STORE_DRIVER
+        value: sqlite
+      - key: CALANE_SQLITE_PATH
+        value: /data/calane.sqlite
+      # Keep other on-disk state (callback secrets, instance keys) on the disk too.
+      - key: LLM_PIPE_STORE
+        value: /data/runs
+      - key: CALANE_KEYS_DIR
+        value: /data/keys
+      # Public URL advertised in the OpenAPI document's servers[].url.
+      - key: CALANE_PUBLIC_URL
+        sync: false
+      # --- Secrets: set in the dashboard, never committed (sync: false) ---
+      - key: CALANE_API_TOKEN # S11 bearer (Custom GPT + CLI)
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # --- OAuth 2.1 / OIDC (R2) — set to enable the interactive Claude connector ---
+      - key: CALANE_OIDC_ISSUER
+        sync: false
+      - key: CALANE_OIDC_AUDIENCE
+        sync: false
+      - key: CALANE_OIDC_JWKS_URI
+        sync: false

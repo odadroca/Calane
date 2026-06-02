@@ -1,0 +1,21 @@
+id: dag_pipeline
+version: 0.1.0
+providers:
+  - id: mock
+    type: mock
+channels:
+  - id: root
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+  - id: left
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [root]
+  - id: right
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [root]
+  - id: merge
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [left, right]

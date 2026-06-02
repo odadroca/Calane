@@ -1,0 +1,133 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "llm_pipeline_kernel",
+  "name_for_human": "LLM Pipeline Kernel",
+  "description_for_model": "Execute versioned, schema-validated, multi-model analysis pipelines and export traceable run bundles. Exposes a deliberately small surface of 8 coarse-grained tools (well under the ~30 tool limit). Each tool maps to a REST endpoint; do not expect one tool per internal function.",
+  "description_for_human": "Run inspectable, reproducible LLM analysis pipelines.",
+  "api": { "type": "rest", "base_url": "http://localhost:8787" },
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "run_pipeline",
+        "description": "Execute a named pipeline against an input. Maps to POST /runs. To resume a prior partial run, set options.resumeFromRunId (completed channels are carried forward).",
+        "x-endpoint": { "method": "POST", "path": "/runs" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pipelineId", "input"],
+          "properties": {
+            "pipelineId": { "type": "string" },
+            "input": { "type": "string" },
+            "options": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "providers": { "type": "array", "items": { "type": "string" } },
+                "depth": { "type": "number" },
+                "maxConcurrency": { "type": "number" },
+                "timeoutMs": { "type": "number" },
+                "exportRedacted": { "type": "boolean" },
+                "resumeFromRunId": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_run_result",
+        "description": "Fetch a stored run result by id. Maps to GET /runs/{runId}.",
+        "x-endpoint": { "method": "GET", "path": "/runs/{runId}" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId"],
+          "properties": { "runId": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "list_pipelines",
+        "description": "List available pipeline ids. Maps to GET /pipelines.",
+        "x-endpoint": { "method": "GET", "path": "/pipelines" },
+        "parameters": { "type": "object", "additionalProperties": false, "properties": {} }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "validate_pipeline",
+        "description": "Validate a pipeline definition by id. Maps to POST /pipelines/{pipelineId}/validate.",
+        "x-endpoint": { "method": "POST", "path": "/pipelines/{pipelineId}/validate" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pipelineId"],
+          "properties": { "pipelineId": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "export_run_bundle",
+        "description": "Export a reproducible run bundle for a run. Maps to GET /runs/{runId}/export.",
+        "x-endpoint": { "method": "GET", "path": "/runs/{runId}/export" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId"],
+          "properties": {
+            "runId": { "type": "string" },
+            "redacted": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "rerun_channel",
+        "description": "Re-run a single channel for an existing run's input. Maps to POST /runs/{runId}/rerun-channel.",
+        "x-endpoint": { "method": "POST", "path": "/runs/{runId}/rerun-channel" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId", "channelId"],
+          "properties": {
+            "runId": { "type": "string" },
+            "channelId": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "list_runs",
+        "description": "List stored run ids. Maps to GET /runs.",
+        "x-endpoint": { "method": "GET", "path": "/runs" },
+        "parameters": { "type": "object", "additionalProperties": false, "properties": {} }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_pipeline_spec",
+        "description": "Fetch the resolved spec + source metadata for a pipeline. Maps to GET /pipelines/{pipelineId}.",
+        "x-endpoint": { "method": "GET", "path": "/pipelines/{pipelineId}" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pipelineId"],
+          "properties": { "pipelineId": { "type": "string" } }
+        }
+      }
+    }
+  ]
+}

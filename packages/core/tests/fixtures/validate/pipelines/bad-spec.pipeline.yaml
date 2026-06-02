@@ -1,0 +1,8 @@
+id: bad_spec_pipeline
+version: 0.1.0
+providers:
+  - id: mock
+    type: mock
+channels:
+  - id: analyze
+    prompt: prompts/ok.md

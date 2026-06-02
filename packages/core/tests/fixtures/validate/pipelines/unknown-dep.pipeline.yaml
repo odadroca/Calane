@@ -1,0 +1,10 @@
+id: unknown_dep_pipeline
+version: 0.1.0
+providers:
+  - id: mock
+    type: mock
+channels:
+  - id: a
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [does_not_exist]

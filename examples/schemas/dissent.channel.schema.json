@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "dissent.channel.schema.json",
+  "title": "Dissent Channel Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["objections"],
+  "properties": {
+    "objections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target", "challenge", "severity"],
+        "properties": {
+          "target": { "type": "string", "minLength": 1 },
+          "challenge": { "type": "string", "minLength": 1 },
+          "severity": { "type": "number", "minimum": 0, "maximum": 1 },
+          "rebuttal_difficulty": { "type": "string", "enum": ["low", "medium", "high"] }
+        }
+      }
+    }
+  }
+}

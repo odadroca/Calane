@@ -1,0 +1,23 @@
+id: synthesis_adversarial
+name: SWOT with adversarial synthesis
+version: 0.1.0
+description: SWOT strengths/weaknesses synthesized with the adversarial variant.
+providers:
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: strengths
+    executionMode: direct_provider
+    prompt: prompts/swot/strengths.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: weaknesses
+    executionMode: direct_provider
+    prompt: prompts/swot/weaknesses.md
+    outputSchema: schemas/swot.channel.schema.json
+synthesis:
+  id: synthesis
+  variant: adversarial
+  executionMode: direct_provider
+  prompt: prompts/synthesis/adversarial.md
+  outputSchema: schemas/synthesis/adversarial.synthesis.schema.json

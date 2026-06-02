@@ -1,0 +1,31 @@
+id: steelman_redteam
+name: Steelman then Red Team
+version: 0.1.0
+description: >
+  Builds the strongest case (steelman), then attacks it (red_team), then
+  synthesizes the surviving assessment.
+providers:
+  - id: openai
+    type: openai-compatible
+    model: gpt-4.1-mini
+    apiKeyEnv: OPENAI_API_KEY
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: steelman
+    name: Steelman
+    executionMode: direct_provider
+    prompt: prompts/steelman.md
+    outputSchema: schemas/steelman.channel.schema.json
+  - id: red_team
+    name: Red Team
+    executionMode: direct_provider
+    prompt: prompts/red_team.md
+    outputSchema: schemas/red_team.channel.schema.json
+synthesis:
+  id: synthesis
+  name: Synthesis
+  executionMode: direct_provider
+  prompt: prompts/swot/synthesis.md
+  outputSchema: schemas/swot.synthesis.schema.json

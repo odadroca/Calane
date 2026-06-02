@@ -1,0 +1,976 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "llm-pipeline-kernel",
+    "version": "0.1.0",
+    "description": "Run versioned, schema-validated, multi-model analysis pipelines and fetch traceable run results. Coarse REST surface matching the kernel's 8 tools."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8787"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "RunRequest": {
+        "additionalProperties": false,
+        "type": "object",
+        "properties": {
+          "pipelineId": {
+            "type": "string"
+          },
+          "input": {
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+              "providers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "depth": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "maxConcurrency": {
+                "minimum": 1,
+                "type": "number"
+              },
+              "timeoutMs": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "exportRedacted": {
+                "type": "boolean"
+              },
+              "resumeFromRunId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "pipelineId",
+          "input"
+        ]
+      },
+      "RunResult": {
+        "additionalProperties": false,
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "pipelineId": {
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "const": "completed",
+                "type": "string"
+              },
+              {
+                "const": "failed",
+                "type": "string"
+              },
+              {
+                "const": "partial",
+                "type": "string"
+              }
+            ]
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input": {
+            "type": "string"
+          },
+          "source": {
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+              "registry": {
+                "type": "string"
+              },
+              "ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "commitSha": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pipelineHash": {
+                "type": "string"
+              },
+              "promptHashes": {
+                "type": "object",
+                "patternProperties": {
+                  "^(.*)$": {
+                    "type": "string"
+                  }
+                }
+              },
+              "schemaHashes": {
+                "type": "object",
+                "patternProperties": {
+                  "^(.*)$": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "registry",
+              "ref",
+              "commitSha",
+              "pipelineHash",
+              "promptHashes",
+              "schemaHashes"
+            ]
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recursion": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "maxDepth": {
+                "type": "number"
+              },
+              "currentDepth": {
+                "type": "number"
+              },
+              "carryForwardStrategy": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "enabled",
+              "maxDepth",
+              "currentDepth",
+              "carryForwardStrategy"
+            ]
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "channelId": {
+                  "type": "string"
+                },
+                "executionMode": {
+                  "anyOf": [
+                    {
+                      "const": "direct_provider",
+                      "type": "string"
+                    },
+                    {
+                      "const": "delegated_agent",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "provider": {
+                  "type": "string"
+                },
+                "model": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "status": {
+                  "anyOf": [
+                    {
+                      "const": "ok",
+                      "type": "string"
+                    },
+                    {
+                      "const": "invalid_json",
+                      "type": "string"
+                    },
+                    {
+                      "const": "schema_error",
+                      "type": "string"
+                    },
+                    {
+                      "const": "refused",
+                      "type": "string"
+                    },
+                    {
+                      "const": "timeout",
+                      "type": "string"
+                    },
+                    {
+                      "const": "error",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "latencyMs": {
+                  "type": "number"
+                },
+                "usage": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "inputTokens": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "outputTokens": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "costUsd": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "inputTokens",
+                    "outputTokens",
+                    "costUsd"
+                  ]
+                },
+                "rawOutputRef": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "parsedOutput": {},
+                "schemaValid": {
+                  "type": "boolean"
+                },
+                "validationErrors": {
+                  "type": "array",
+                  "items": {}
+                },
+                "repairAttempted": {
+                  "type": "boolean"
+                },
+                "metadata": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {}
+                  }
+                }
+              },
+              "required": [
+                "channelId",
+                "executionMode",
+                "provider",
+                "model",
+                "status",
+                "latencyMs",
+                "usage",
+                "rawOutputRef",
+                "parsedOutput",
+                "schemaValid",
+                "validationErrors",
+                "metadata"
+              ]
+            }
+          },
+          "synthesis": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "channelId": {
+                    "type": "string"
+                  },
+                  "executionMode": {
+                    "anyOf": [
+                      {
+                        "const": "direct_provider",
+                        "type": "string"
+                      },
+                      {
+                        "const": "delegated_agent",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "const": "ok",
+                        "type": "string"
+                      },
+                      {
+                        "const": "invalid_json",
+                        "type": "string"
+                      },
+                      {
+                        "const": "schema_error",
+                        "type": "string"
+                      },
+                      {
+                        "const": "refused",
+                        "type": "string"
+                      },
+                      {
+                        "const": "timeout",
+                        "type": "string"
+                      },
+                      {
+                        "const": "error",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "latencyMs": {
+                    "type": "number"
+                  },
+                  "usage": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "properties": {
+                      "inputTokens": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "outputTokens": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "costUsd": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "inputTokens",
+                      "outputTokens",
+                      "costUsd"
+                    ]
+                  },
+                  "rawOutputRef": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "parsedOutput": {},
+                  "schemaValid": {
+                    "type": "boolean"
+                  },
+                  "validationErrors": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "repairAttempted": {
+                    "type": "boolean"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(.*)$": {}
+                    }
+                  }
+                },
+                "required": [
+                  "channelId",
+                  "executionMode",
+                  "provider",
+                  "model",
+                  "status",
+                  "latencyMs",
+                  "usage",
+                  "rawOutputRef",
+                  "parsedOutput",
+                  "schemaValid",
+                  "validationErrors",
+                  "metadata"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resumedFrom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "replayedFrom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "policy": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "policyId": {
+                  "type": "string"
+                },
+                "hook": {
+                  "anyOf": [
+                    {
+                      "const": "beforeChannel",
+                      "type": "string"
+                    },
+                    {
+                      "const": "afterChannel",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "channelId": {
+                  "type": "string"
+                },
+                "decision": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policyId",
+                "hook",
+                "channelId",
+                "decision",
+                "reason"
+              ]
+            }
+          },
+          "validation": {
+            "type": "object",
+            "properties": {
+              "valid": {
+                "type": "boolean"
+              },
+              "errors": {
+                "type": "array",
+                "items": {}
+              }
+            },
+            "required": [
+              "valid",
+              "errors"
+            ]
+          },
+          "telemetry": {
+            "type": "object",
+            "properties": {
+              "traceId": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "traceId"
+            ]
+          },
+          "artifacts": {
+            "type": "object",
+            "properties": {
+              "bundlePath": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "bundlePath"
+            ]
+          }
+        },
+        "required": [
+          "runId",
+          "pipelineId",
+          "status",
+          "startedAt",
+          "completedAt",
+          "input",
+          "source",
+          "providers",
+          "recursion",
+          "channels",
+          "synthesis",
+          "resumedFrom",
+          "policy",
+          "validation",
+          "telemetry",
+          "artifacts"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/runs": {
+      "post": {
+        "operationId": "run_pipeline",
+        "summary": "Run a pipeline",
+        "description": "Execute a named pipeline against an input string and store the run. Returns the full RunResult (channels, synthesis, validation, source hashes).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The completed run result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing pipelineId or input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "list_runs",
+        "summary": "List run ids",
+        "description": "List the ids of all stored runs.",
+        "responses": {
+          "200": {
+            "description": "The stored run ids.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "runs": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runs/{runId}": {
+      "get": {
+        "operationId": "get_run_result",
+        "summary": "Get a run result",
+        "description": "Fetch a single stored run result by its id.",
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the stored run.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runs/{runId}/rerun-channel": {
+      "post": {
+        "operationId": "rerun_channel",
+        "summary": "Re-run one channel",
+        "description": "Re-run a single channel using an existing run's stored input and return the fresh channel.",
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the stored run.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "channelId"
+                ],
+                "properties": {
+                  "channelId": {
+                    "type": "string",
+                    "description": "The id of the channel to re-run."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The fresh channel result and its new run id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run or channel not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runs/{runId}/export": {
+      "get": {
+        "operationId": "export_run_bundle",
+        "summary": "Export a run bundle",
+        "description": "Export a reproducible run bundle for a stored run. Set redacted=true to strip obvious secrets from raw outputs.",
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the stored run.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "redacted",
+            "in": "query",
+            "required": false,
+            "description": "When true, redact obvious secrets from raw outputs in the bundle.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The exported bundle descriptor (paths + canonical reference).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipelines": {
+      "get": {
+        "operationId": "list_pipelines",
+        "summary": "List pipelines",
+        "description": "List the ids of the pipelines available in the registry.",
+        "responses": {
+          "200": {
+            "description": "The available pipeline ids.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pipelines": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipelines/{pipelineId}": {
+      "get": {
+        "operationId": "get_pipeline_spec",
+        "summary": "Get a pipeline spec",
+        "description": "Fetch the resolved spec and source metadata for one pipeline by id.",
+        "parameters": [
+          {
+            "name": "pipelineId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the pipeline in the registry.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The resolved pipeline spec and source metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pipeline not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipelines/{pipelineId}/validate": {
+      "post": {
+        "operationId": "validate_pipeline",
+        "summary": "Validate a pipeline",
+        "description": "Validate a pipeline definition by id (schema, prompts, providers) and return a structured report.",
+        "parameters": [
+          {
+            "name": "pipelineId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the pipeline in the registry.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The validation report.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pipeline not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

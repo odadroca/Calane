@@ -1,0 +1,23 @@
+{
+  "name": "@llm-pipe/telemetry-otel",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "scripts": { "build": "tsup src/index.ts --format esm --dts --clean" },
+  "dependencies": {
+    "@llm-pipe/core": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/resources": "^2.0.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/semantic-conventions": "^1.30.0"
+  },
+  "devDependencies": {
+    "@llm-pipe/provider-mock": "workspace:*",
+    "@llm-pipe/registry-filesystem": "workspace:*",
+    "@llm-pipe/store-filesystem": "workspace:*"
+  }
+}

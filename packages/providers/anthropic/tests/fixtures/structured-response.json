@@ -1,0 +1,25 @@
+{
+  "id": "msg_fixture_0001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-4-7",
+  "stop_reason": "tool_use",
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "toolu_fixture_0001",
+      "name": "emit_structured_output",
+      "input": {
+        "dimension": "strengths",
+        "claims": [
+          {
+            "statement": "Strong engineering culture with deep domain expertise.",
+            "confidence": 0.82,
+            "evidence": "Repeated on-time delivery of complex features."
+          }
+        ]
+      }
+    }
+  ],
+  "usage": { "input_tokens": 412, "output_tokens": 96 }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "msg_fixture_0003",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-4-7",
+  "stop_reason": "refusal",
+  "content": [],
+  "usage": { "input_tokens": 80, "output_tokens": 0 }
+}

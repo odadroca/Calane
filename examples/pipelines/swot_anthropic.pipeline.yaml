@@ -1,0 +1,41 @@
+id: swot_anthropic
+name: SWOT Analysis (Anthropic)
+version: 0.1.0
+description: SWOT analysis and synthesis run against Anthropic claude- models.
+recursion:
+  enabled: false
+  maxDepth: 1
+providers:
+  - id: anthropic
+    type: anthropic
+    model: claude-opus-4-7
+    apiKeyEnv: ANTHROPIC_API_KEY
+    options:
+      maxTokens: 2048
+channels:
+  - id: strengths
+    name: Strengths
+    executionMode: direct_provider
+    prompt: prompts/swot/strengths.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: weaknesses
+    name: Weaknesses
+    executionMode: direct_provider
+    prompt: prompts/swot/weaknesses.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: opportunities
+    name: Opportunities
+    executionMode: direct_provider
+    prompt: prompts/swot/opportunities.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: threats
+    name: Threats
+    executionMode: direct_provider
+    prompt: prompts/swot/threats.md
+    outputSchema: schemas/swot.channel.schema.json
+synthesis:
+  id: synthesis
+  name: Synthesis
+  executionMode: direct_provider
+  prompt: prompts/swot/synthesis.md
+  outputSchema: schemas/swot.synthesis.schema.json

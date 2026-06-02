@@ -1,0 +1,22 @@
+id: swot_eval
+name: SWOT Run Evaluation
+version: 0.1.0
+description: >
+  An evaluation pipeline built from ordinary Calane primitives. Its input is a
+  prior SWOT run's bundle (or run-result JSON); its output is a dimension-scored
+  evaluation. No new abstraction — a single channel that reads the prior run from
+  {{input}} and emits a schema-validated evaluation.
+providers:
+  - id: openai
+    type: openai-compatible
+    model: gpt-4.1-mini
+    apiKeyEnv: OPENAI_API_KEY
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: score
+    name: Score
+    executionMode: direct_provider
+    prompt: prompts/eval/swot_eval.md
+    outputSchema: schemas/eval/evaluation.schema.json

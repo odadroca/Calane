@@ -1,0 +1,10 @@
+id: missing_prompt_pipeline
+version: 0.1.0
+providers:
+  - id: mock
+    type: mock
+channels:
+  - id: analyze
+    executionMode: direct_provider
+    prompt: prompts/does-not-exist.md
+    outputSchema: schemas/ok.schema.json

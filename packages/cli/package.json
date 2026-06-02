@@ -1,0 +1,24 @@
+{
+  "name": "@llm-pipe/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "llm-pipe": "./dist/index.js" },
+  "main": "./dist/index.js",
+  "files": ["dist"],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && tsup src/index.ts --format esm --clean"
+  },
+  "dependencies": {
+    "@llm-pipe/core": "workspace:*",
+    "@llm-pipe/provider-anthropic": "workspace:*",
+    "@llm-pipe/provider-mock": "workspace:*",
+    "@llm-pipe/provider-openai-compatible": "workspace:*",
+    "@llm-pipe/registry-filesystem": "workspace:*",
+    "@llm-pipe/registry-git": "workspace:*",
+    "@llm-pipe/store-filesystem": "workspace:*",
+    "@llm-pipe/store-sqlite": "workspace:*",
+    "commander": "^12.1.0",
+    "yaml": "^2.5.0"
+  }
+}

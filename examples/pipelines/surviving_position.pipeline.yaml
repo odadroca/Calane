@@ -1,0 +1,36 @@
+id: surviving_position
+name: Surviving Position Analysis
+version: 0.1.0
+description: >
+  Builds the strongest case (steelman), challenges it (dissent + red_team), then
+  synthesizes which positions survive the adversarial pass.
+providers:
+  - id: openai
+    type: openai-compatible
+    model: gpt-4.1-mini
+    apiKeyEnv: OPENAI_API_KEY
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: steelman
+    name: Steelman
+    executionMode: direct_provider
+    prompt: prompts/steelman.md
+    outputSchema: schemas/steelman.channel.schema.json
+  - id: dissent
+    name: Dissent
+    executionMode: direct_provider
+    prompt: prompts/dissent.md
+    outputSchema: schemas/dissent.channel.schema.json
+  - id: red_team
+    name: Red Team
+    executionMode: direct_provider
+    prompt: prompts/red_team.md
+    outputSchema: schemas/red_team.channel.schema.json
+synthesis:
+  id: synthesis
+  name: Surviving Position Synthesis
+  executionMode: direct_provider
+  prompt: prompts/synthesis_surviving_position.md
+  outputSchema: schemas/surviving_position.synthesis.schema.json

@@ -1,0 +1,23 @@
+{
+  "name": "@llm-pipe/server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/server.js",
+  "files": ["dist", "public"],
+  "scripts": {
+    "build": "tsup src/build-server.ts src/server.ts src/combined.ts src/routes.ts src/openapi.ts --format esm --clean --no-splitting"
+  },
+  "dependencies": {
+    "@fastify/static": "^9.1.1",
+    "@llm-pipe/core": "workspace:*",
+    "@llm-pipe/mcp-server": "workspace:*",
+    "@llm-pipe/provider-anthropic": "workspace:*",
+    "@llm-pipe/provider-mock": "workspace:*",
+    "@llm-pipe/provider-openai-compatible": "workspace:*",
+    "@llm-pipe/registry-filesystem": "workspace:*",
+    "@llm-pipe/store-filesystem": "workspace:*",
+    "@llm-pipe/store-sqlite": "workspace:*",
+    "fastify": "^5.8.3",
+    "pino": "^9.4.0"
+  }
+}

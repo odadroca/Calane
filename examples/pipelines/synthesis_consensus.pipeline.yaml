@@ -1,0 +1,23 @@
+id: synthesis_consensus
+name: SWOT with consensus synthesis
+version: 0.1.0
+description: SWOT strengths/weaknesses synthesized with the consensus variant.
+providers:
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: strengths
+    executionMode: direct_provider
+    prompt: prompts/swot/strengths.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: weaknesses
+    executionMode: direct_provider
+    prompt: prompts/swot/weaknesses.md
+    outputSchema: schemas/swot.channel.schema.json
+synthesis:
+  id: synthesis
+  variant: consensus
+  executionMode: direct_provider
+  prompt: prompts/synthesis/consensus.md
+  outputSchema: schemas/synthesis/consensus.synthesis.schema.json

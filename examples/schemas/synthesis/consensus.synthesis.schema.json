@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "consensus.synthesis.schema.json",
+  "title": "Consensus Synthesis Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "recommendations"],
+  "properties": {
+    "summary": { "type": "string", "minLength": 1 },
+    "recommendations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "rationale"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "rationale": { "type": "string", "minLength": 1 },
+          "priority": { "type": "string", "enum": ["low", "medium", "high"] }
+        }
+      }
+    },
+    "agreements": { "type": "array", "items": { "type": "string" } },
+    "openQuestions": { "type": "array", "items": { "type": "string" } }
+  }
+}

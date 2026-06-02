@@ -1,0 +1,22 @@
+{
+  "name": "@llm-pipe/mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "llm-pipe-mcp": "./dist/server.js" },
+  "main": "./dist/server.js",
+  "exports": {
+    ".": { "types": "./dist/server.d.ts", "import": "./dist/server.js" },
+    "./http": { "types": "./dist/http.d.ts", "import": "./dist/http.js" }
+  },
+  "files": ["dist"],
+  "scripts": { "build": "tsup src/server.ts src/http.ts --format esm --dts --clean" },
+  "dependencies": {
+    "@llm-pipe/core": "workspace:*",
+    "@llm-pipe/provider-anthropic": "workspace:*",
+    "@llm-pipe/provider-mock": "workspace:*",
+    "@llm-pipe/provider-openai-compatible": "workspace:*",
+    "@llm-pipe/registry-filesystem": "workspace:*",
+    "@llm-pipe/store-filesystem": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  }
+}

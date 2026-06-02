@@ -1,0 +1,50 @@
+id: swot_recursive_dissent
+name: Recursive SWOT Analysis with Dissent
+version: 0.1.0
+description: >
+  SWOT analysis followed by a dissent channel that challenges the prior
+  positions, then synthesis, with optional bounded recursion.
+recursion:
+  enabled: true
+  maxDepth: 3
+  carryForwardStrategy: synthesis_only
+providers:
+  - id: openai
+    type: openai-compatible
+    model: gpt-4.1-mini
+    apiKeyEnv: OPENAI_API_KEY
+  - id: mock
+    type: mock
+    model: mock-model-1
+channels:
+  - id: strengths
+    name: Strengths
+    executionMode: direct_provider
+    prompt: prompts/swot/strengths.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: weaknesses
+    name: Weaknesses
+    executionMode: direct_provider
+    prompt: prompts/swot/weaknesses.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: opportunities
+    name: Opportunities
+    executionMode: direct_provider
+    prompt: prompts/swot/opportunities.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: threats
+    name: Threats
+    executionMode: direct_provider
+    prompt: prompts/swot/threats.md
+    outputSchema: schemas/swot.channel.schema.json
+  - id: dissent
+    name: Dissent
+    executionMode: direct_provider
+    prompt: prompts/dissent.md
+    outputSchema: schemas/dissent.channel.schema.json
+synthesis:
+  id: synthesis
+  name: Synthesis
+  executionMode: direct_provider
+  prompt: prompts/swot/synthesis.md
+  outputSchema: schemas/swot.synthesis.schema.json

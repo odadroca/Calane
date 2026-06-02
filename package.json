@@ -1,0 +1,29 @@
+{
+  "name": "llm-pipeline-kernel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lightweight, plugin-oriented LLM pipeline execution kernel for versioned, schema-validated, multi-model analysis pipelines with traceable run bundles.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.3.0",
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/**\" run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "cli": "node packages/cli/dist/index.js",
+    "server": "node packages/server/dist/server.js",
+    "mcp": "node packages/mcp-server/dist/server.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^20.14.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  }
+}

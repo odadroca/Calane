@@ -1,0 +1,18 @@
+id: cyclic_pipeline
+version: 0.1.0
+providers:
+  - id: mock
+    type: mock
+channels:
+  - id: a
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [c]
+  - id: b
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [a]
+  - id: c
+    executionMode: direct_provider
+    prompt: prompts/ok.md
+    dependsOn: [b]
