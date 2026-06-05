@@ -5,7 +5,7 @@
   "description": "A lightweight, plugin-oriented LLM pipeline execution kernel for versioned, schema-validated, multi-model analysis pipelines with traceable run bundles.",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": "^22.0.0 || >=24.0.0"
   },
   "packageManager": "pnpm@11.3.0",
   "scripts": {
