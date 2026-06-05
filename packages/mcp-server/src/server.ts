@@ -108,13 +108,26 @@ async function main() {
   process.stderr.write("llm-pipeline-kernel MCP server ready (8 tools)\n");
 }
 
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-// Compare URLs (not paths) so the entry detection works whether the binary is
-// invoked with an absolute path, a relative path, or via the bin shim — and so
-// Windows backslash vs POSIX forward-slash differences do not break it. Matches
-// the pattern applied to packages/server/src/server.ts in the post-close fix.
-const isMain =
-  !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+// Compare URLs (not paths) so entry detection works for absolute / relative /
+// bin-shim invocations and across Windows backslash vs POSIX forward-slash.
+// **Realpath argv[1] first**: Node's ESM loader normalises `import.meta.url` to
+// the real file path, but `pathToFileURL(argv[1])` preserves any symlinks. When
+// pnpm/yarn install the bin shim (`node_modules/.bin/llm-pipe-mcp` →
+// `…/@llm-pipe/mcp-server/dist/server.js`), the raw `argv[1]` is the symlink
+// path and the comparison fails without realpath — main() would never run via
+// the documented `llm-pipe-mcp` shim. `realpathSync` is wrapped in try/catch
+// because it throws if the file is missing.
+const isMain = (() => {
+  const arg = process.argv[1];
+  if (!arg) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(arg)).href;
+  } catch {
+    return false;
+  }
+})();
 if (isMain) {
   main().catch((err) => {
     process.stderr.write(`${err}\n`);
