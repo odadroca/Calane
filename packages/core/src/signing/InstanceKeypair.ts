@@ -24,12 +24,29 @@ import { join } from "node:path";
  * via `node:crypto` — no new dependency.
  */
 
-const DEFAULT_DIR = join(homedir(), ".calane", "keys");
+const HOME_DEFAULT_DIR = join(homedir(), ".calane", "keys");
 const PRIVATE_FILE = "instance_ed25519";
 const PUBLIC_FILE = "instance_ed25519.pub";
 
+/**
+ * Resolve the key directory at construction time. Precedence:
+ *   1. explicit `options.dir` (callers that need to override — tests, ad-hoc).
+ *   2. `CALANE_KEYS_DIR` env var (the operational knob that `render.yaml` and
+ *      the Dockerfile both set).
+ *   3. `~/.calane/keys` (last-resort default for local dev).
+ *
+ * Evaluating at construction time (not module-load time) means tests can flip
+ * the env between cases without re-importing the module. The previous module-
+ * level constant meant CLI commands that bypassed `createKernel()` (e.g.
+ * `export-run --sign`, `export-key`) silently fell back to `~/.calane/keys`,
+ * defeating the Docker / Render `/data/keys` persistence guarantee.
+ */
+function resolveKeysDir(override?: string): string {
+  return override ?? process.env.CALANE_KEYS_DIR ?? HOME_DEFAULT_DIR;
+}
+
 export interface KeypairOptions {
-  /** Override the key directory (default ~/.calane/keys). For tests. */
+  /** Override the key directory. Falls back to `CALANE_KEYS_DIR` then `~/.calane/keys`. */
   dir?: string;
 }
 
@@ -39,7 +56,7 @@ export class InstanceKeypair {
   private readonly publicPath: string;
 
   constructor(options: KeypairOptions = {}) {
-    this.dir = options.dir ?? DEFAULT_DIR;
+    this.dir = resolveKeysDir(options.dir);
     this.privatePath = join(this.dir, PRIVATE_FILE);
     this.publicPath = join(this.dir, PUBLIC_FILE);
   }
