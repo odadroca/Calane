@@ -108,8 +108,13 @@ async function main() {
   process.stderr.write("llm-pipeline-kernel MCP server ready (8 tools)\n");
 }
 
-import { fileURLToPath } from "node:url";
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+import { pathToFileURL } from "node:url";
+// Compare URLs (not paths) so the entry detection works whether the binary is
+// invoked with an absolute path, a relative path, or via the bin shim — and so
+// Windows backslash vs POSIX forward-slash differences do not break it. Matches
+// the pattern applied to packages/server/src/server.ts in the post-close fix.
+const isMain =
+  !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
   main().catch((err) => {
     process.stderr.write(`${err}\n`);

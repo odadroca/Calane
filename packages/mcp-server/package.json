@@ -9,7 +9,7 @@
     "./http": { "types": "./dist/http.d.ts", "import": "./dist/http.js" }
   },
   "files": ["dist"],
-  "scripts": { "build": "tsup src/server.ts src/http.ts --format esm --dts --clean" },
+  "scripts": { "build": "tsup src/server.ts src/http.ts --format esm --dts --clean --no-splitting" },
   "dependencies": {
     "@llm-pipe/core": "workspace:*",
     "@llm-pipe/provider-anthropic": "workspace:*",
