@@ -40,17 +40,15 @@ OpenAI-style tool caller — can:
 
 Plus, for the first implementation: no UI, no multi-tenant SaaS, no enterprise auth.
 
-## What's added in this
+## What's added in this fork
 
-Each item maps to a single commit visible in this repo's `git log` after the
-`Initial snapshot from upstream …` commit.
+Each item is visible as a commit in this repo's `git log`.
 
-1. **`core` — fail-fast on permanent provider errors.** The retry classifier
-   buckets every non-timeout failure as `provider_error`, so the configured
-   `retry.on` filter could not distinguish a missing API key (permanent) from a
-   429 (transient). `ChannelExecutor` now treats missing-credentials and 4xx
-   auth / bad-request errors as non-retryable while 429, 5xx, and timeouts stay
-   retryable. Added unit tests in `packages/core/tests/retry-repair.test.ts`.
+1. **`security` — vitest patched (GHSA-5xrq-8626-4rwp / CVE-2026-47429).**
+   Bumps the test runner to `vitest@^4.1.0` (resolved to `4.1.8`) and adds
+   `packages/core/tests/security-pins.test.ts` — a regression guard that
+   resolves the installed `vitest/package.json` and asserts `>= 4.1.0`, so any
+   future downgrade fails the suite instead of silently re-introducing the vuln.
 2. **`examples` — multi-model distillation pipelines.**
    `examples/pipelines/distillation.pipeline.yaml` distils a subject across
    Claude / GPT / Mistral / Gemini in parallel, then synthesises on Anthropic
@@ -64,12 +62,14 @@ Each item maps to a single commit visible in this repo's `git log` after the
    entrypoint. Mirrors `render.yaml` byte-for-byte (same port, same env
    defaults, same volume, same boot model) so the two deployment paths share
    one boot story. See [`docs/deploy-docker.md`](./docs/deploy-docker.md).
-4. **`fix` — Node-22 engine bump.** `package.json` `engines.node` and
-   `render.yaml` `NODE_VERSION` were `>=20`/`"20"`; the pinned `pnpm@11.3.0`
-   needs Node ≥22.13 (it imports `node:sqlite`, a Node-22 built-in). A
-   from-scratch `pnpm install` on Node 20 failed immediately; both are now
-   `>=22`/`"22"`. Discovered while running the first independent `docker
-   build` of the upstream tree.
+4. **`fix` — Node engine range aligned with vitest.** `package.json`
+   `engines.node` and `render.yaml` `NODE_VERSION` originally claimed Node 20,
+   but the pinned `pnpm@11.3.0` requires Node ≥22.13 (it imports `node:sqlite`,
+   a Node-22 built-in) — a from-scratch `pnpm install` on Node 20 failed
+   immediately. Discovered while running the first independent `docker build`
+   of the upstream tree. Both are now declared as `"^22.0.0 || >=24.0.0"` /
+   `"22"`, matching `vitest@4.1.8`'s own engines range and dropping the
+   non-LTS Node 23 line (EOL 2026-06-01) from the support matrix.
 
 ## Architecture
 
@@ -97,18 +97,23 @@ observational plugin split.
 | --- | --- |
 | `packages/core` | Specs (TypeBox), executor, renderer, validator, bundle exporter, plugin interfaces |
 | `packages/providers/mock` | Deterministic mock provider (offline/tests) |
+| `packages/providers/anthropic` | Anthropic Messages API provider via the official SDK |
 | `packages/providers/openai-compatible` | Fetch-based OpenAI-compatible provider + delegated-agent placeholder |
 | `packages/registries/filesystem` | Filesystem prompt/pipeline/schema registry |
 | `packages/registries/git` | Minimal Git registry (records commit SHA) |
 | `packages/stores/filesystem` | Filesystem result store |
+| `packages/stores/sqlite` | SQLite result store with relational schema |
+| `packages/telemetry/otel` | OpenTelemetry sink (no-op by default) |
 | `packages/cli` | `llm-pipe` CLI |
-| `packages/server` | Fastify REST API + `public/openai.json` |
-| `packages/mcp-server` | Compact 8-tool MCP server |
+| `packages/server` | Fastify REST API + `public/openai.json` + OAuth discovery + `/mcp` |
+| `packages/mcp-server` | MCP server (stdio + Streamable HTTP), 8-tool surface |
 
 ## Getting started
 
-Requires Node.js **22+** and pnpm. (Node 22 is required by the pinned
-`pnpm@11.3.0`; see the "What's added" §4 above for the why.)
+Requires **Node 22 LTS (or 24+)** and pnpm — the engine range is
+`"^22.0.0 || >=24.0.0"`. The pinned `pnpm@11.3.0` requires Node ≥22.13 (it
+imports `node:sqlite`); `vitest@4.1.8` declares the same engines range. See
+"What's added" §4 above for the discovery story.
 
 ```bash
 pnpm install
@@ -179,7 +184,8 @@ Practical, runnable walkthroughs that pair the per-surface references with real
 use-cases (run → sign → verify; resume/diff/replay/stats; REST/MCP/A2A;
 connecting an external or GitHub registry) live in
 [`docs/scenarios/`](./docs/scenarios/README.md). Each runnable block is exercised
-offline by a CI test so the docs can't silently rot.
+by `pnpm test` (via `packages/cli/tests/scenarios.test.ts`) so the docs can't
+silently rot.
 
 ## The 8-tool surface
 
@@ -196,13 +202,21 @@ codebase. See [`docs/schema-rule.md`](./docs/schema-rule.md).
 
 ## Providers
 
+Shipped:
+
 - `mock` — deterministic, schema-synthesizing (offline + tests).
+- `anthropic` — Anthropic Messages API via the official SDK; forces structured
+  output through a single `emit_structured_output` tool when an `outputSchema`
+  is set. Pricing table bundled (USD / 1M tokens); `costUsd` is `null` for
+  unknown models, never silently `0`.
 - `openai-compatible` — any OpenAI-style `/chat/completions` endpoint; key from
-  the env var named by `apiKeyEnv` (default `OPENAI_API_KEY`).
+  the env var named by `apiKeyEnv` (default `OPENAI_API_KEY`). Used for OpenAI
+  itself **and** for Mistral, Gemini's OpenAI-compatible endpoint, Groq,
+  Together, OpenRouter, local Ollama, etc. — set `baseUrl` per provider.
 - `delegated-agent` — placeholder for `delegated_agent` execution mode.
 
-The provider interface is designed to admit future OpenAI, Anthropic, Ollama,
-LiteLLM, Portkey, MCP-agent, and custom HTTP providers without core changes.
+The adapter interface is designed to admit future Ollama-native, LiteLLM,
+Portkey, MCP-agent, and custom HTTP providers without core changes.
 
 ## Run bundles
 
