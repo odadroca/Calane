@@ -110,20 +110,28 @@ async function main() {
 
 import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-// Compare URLs (not paths) so entry detection works for absolute / relative /
-// bin-shim invocations and across Windows backslash vs POSIX forward-slash.
-// **Realpath argv[1] first**: Node's ESM loader normalises `import.meta.url` to
-// the real file path, but `pathToFileURL(argv[1])` preserves any symlinks. When
-// pnpm/yarn install the bin shim (`node_modules/.bin/llm-pipe-mcp` →
-// `…/@llm-pipe/mcp-server/dist/server.js`), the raw `argv[1]` is the symlink
-// path and the comparison fails without realpath — main() would never run via
-// the documented `llm-pipe-mcp` shim. `realpathSync` is wrapped in try/catch
-// because it throws if the file is missing.
+// Detect "is this file the program entry" across every Node invocation mode.
+// Compare URLs (not paths) so absolute / relative / Windows-backslash all work,
+// and accept EITHER the raw URL OR the realpath URL of `argv[1]`:
+//
+//   Default Node behaviour: `import.meta.url` is normalised to the realpath
+//     (Node's ESM loader canonicalises the main module). When the binary is
+//     run through the `node_modules/.bin/llm-pipe-mcp` symlink shim, `argv[1]`
+//     is still the symlink path, so we need `realpathSync(argv[1])` for equality.
+//
+//   `--preserve-symlinks-main` (or `NODE_OPTIONS=--preserve-symlinks-main`):
+//     `import.meta.url` stays at the symlink path; the realpath branch would
+//     now reject it. The raw `pathToFileURL(argv[1])` branch catches this case.
+//
+// Either branch matching is enough; `realpathSync` is wrapped in try/catch
+// because it throws on a missing file.
 const isMain = (() => {
   const arg = process.argv[1];
   if (!arg) return false;
+  const here = import.meta.url;
+  if (here === pathToFileURL(arg).href) return true;
   try {
-    return import.meta.url === pathToFileURL(realpathSync(arg)).href;
+    return here === pathToFileURL(realpathSync(arg)).href;
   } catch {
     return false;
   }
