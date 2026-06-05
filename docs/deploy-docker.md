@@ -91,6 +91,8 @@ Defaults that come pre-set in the image (override only if you have a reason to):
 | `NODE_ENV` | `production` | Node runtime mode. |
 | `CALANE_STORE_DRIVER` | `sqlite` | SQLite result store. |
 | `CALANE_SQLITE_PATH` | `/data/calane.sqlite` | DB file on the persistent volume. |
+| `LLM_PIPE_STORE` | `/data/runs` | Callback secrets + fetched foreign runs. Without this on the mounted volume the kernel default `./.runs` writes them into the container layer (ephemeral). |
+| `CALANE_KEYS_DIR` | `/data/keys` | Per-instance Ed25519 signing key (S21). Without this on the mounted volume the kernel default `~/.calane/keys` writes it into the container layer — every container replacement would re-generate the key and invalidate previously-signed bundles. |
 
 Secrets to pass at run-time (never baked into the image):
 
@@ -110,9 +112,14 @@ The image declares `VOLUME ["/data"]`. The combined entrypoint writes to:
 
 ```
 /data/calane.sqlite                  # runs (CALANE_SQLITE_PATH)
-/data/runs/...                       # callback secrets, foreign runs (LLM_PIPE_STORE if set)
-/data/keys/...                       # instance signing key (CALANE_KEYS_DIR if set)
+/data/runs/...                       # callback secrets, foreign runs (LLM_PIPE_STORE)
+/data/keys/...                       # instance signing key (CALANE_KEYS_DIR)
 ```
+
+All three paths are **baked into the image** as `ENV` defaults (see the table
+above), so a plain `-v calane-data:/data` mount is enough — you do not need to
+re-pass `LLM_PIPE_STORE` / `CALANE_KEYS_DIR` on `docker run`. Override only if
+you want them outside `/data`.
 
 Mount a named volume (`-v calane-data:/data`) or a bind mount
 (`-v /path/on/host:/data`) and runs survive across container restarts and image

@@ -66,10 +66,17 @@ COPY --from=builder --chown=app:app /app /app
 USER app
 
 # Defaults align with render.yaml. Override per-deploy as needed.
+# All four CALANE_*/LLM_PIPE_* paths point at /data so callback secrets, foreign
+# fetched runs and the instance signing key persist across container replacement
+# (not just the SQLite run DB). Without these, createKernel()'s defaults would
+# write LLM_PIPE_STORE to ./.runs and CALANE_KEYS_DIR to ~/.calane/keys — both
+# inside the container layer, ephemeral.
 ENV NODE_ENV=production \
     PORT=8787 \
     CALANE_STORE_DRIVER=sqlite \
-    CALANE_SQLITE_PATH=/data/calane.sqlite
+    CALANE_SQLITE_PATH=/data/calane.sqlite \
+    LLM_PIPE_STORE=/data/runs \
+    CALANE_KEYS_DIR=/data/keys
 
 EXPOSE 8787
 VOLUME ["/data"]
