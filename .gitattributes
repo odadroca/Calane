@@ -1,2 +1,6 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Normalize all text files to LF on commit AND force LF in the working tree on
+# checkout. Without `eol=lf`, Windows users with the default `core.autocrlf=true`
+# get CRLF in the working tree and tools that compare against the index (biome
+# format, run-bundle hash comparisons) silently flag every text file as drifted.
+# `eol=lf` makes the working tree match the index on every platform.
+* text=auto eol=lf
