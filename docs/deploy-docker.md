@@ -111,8 +111,8 @@ Secrets to pass at run-time (never baked into the image):
 The image declares `VOLUME ["/data"]`. The combined entrypoint writes to:
 
 ```
-/data/calane.sqlite                  # runs (CALANE_SQLITE_PATH)
-/data/runs/...                       # callback secrets, foreign runs (LLM_PIPE_STORE)
+/data/calane.sqlite                  # SERVER run store (CALANE_SQLITE_PATH)
+/data/runs/...                       # CLI default run store + callback secrets + foreign runs (LLM_PIPE_STORE)
 /data/keys/...                       # instance signing key (CALANE_KEYS_DIR)
 ```
 
@@ -120,6 +120,33 @@ All three paths are **baked into the image** as `ENV` defaults (see the table
 above), so a plain `-v calane-data:/data` mount is enough — you do not need to
 re-pass `LLM_PIPE_STORE` / `CALANE_KEYS_DIR` on `docker run`. Override only if
 you want them outside `/data`.
+
+### `docker exec` CLI vs REST: same volume, two different stores
+
+> **Gotcha** — the **server** uses the SQLite store
+> (`CALANE_STORE_DRIVER=sqlite`, `/data/calane.sqlite`) for `GET /runs/:id`.
+> The **CLI** default is the filesystem store rooted at `LLM_PIPE_STORE`
+> (`/data/runs/`). These are independent backends — a run written by one is
+> **not visible to the other**.
+>
+> So `docker exec calane node packages/cli/dist/index.js run …` writes the
+> run to `/data/runs/<runId>/run.json`, but the very next
+> `GET /runs/<runId>` over REST returns "not found" — the server is reading
+> SQLite.
+>
+> **Pick one of these two patterns**, depending on what you want:
+>
+> 1. **CLI should write runs the server can serve** — pass the CLI an
+>    explicit SQLite store target so both kernels use the same backend:
+>    ```bash
+>    docker exec calane node packages/cli/dist/index.js \
+>      --store sqlite:/data/calane.sqlite \
+>      run swot_recursive examples/inputs/sample-topic.md --providers mock
+>    ```
+> 2. **CLI runs and server runs are intentionally separate streams** — leave
+>    the default. The CLI's filesystem-rooted runs are still on `/data` and
+>    survive container replacement; they just won't surface through
+>    `/runs/:id`.
 
 Mount a named volume (`-v calane-data:/data`) or a bind mount
 (`-v /path/on/host:/data`) and runs survive across container restarts and image

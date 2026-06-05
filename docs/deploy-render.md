@@ -40,10 +40,21 @@ env-var secrets. The service runs the **combined entrypoint**
 
 ```
 CALANE_STORE_DRIVER = sqlite
-CALANE_SQLITE_PATH  = /data/calane.sqlite   # on the mounted disk
-LLM_PIPE_STORE      = /data/runs            # callback secrets, foreign runs
+CALANE_SQLITE_PATH  = /data/calane.sqlite   # SERVER run store (on the mounted disk)
+LLM_PIPE_STORE      = /data/runs            # CLI default run store + callback secrets + foreign runs
 CALANE_KEYS_DIR     = /data/keys            # instance signing key
 ```
+
+> **Gotcha if you SSH in and run the CLI** — the **server** serves `GET
+> /runs/:id` from SQLite; the **CLI default** is the filesystem store at
+> `LLM_PIPE_STORE`. So `llm-pipe run …` from the Render shell writes to
+> `/data/runs/<runId>/` but is **not visible** through `GET /runs/<runId>`.
+> Pass the CLI an explicit SQLite target so both kernels share the backend:
+> ```bash
+> llm-pipe --store sqlite:/data/calane.sqlite run swot_recursive input.md
+> ```
+> Same caveat applies to `export-run`, `get-run`, `stats`, etc. — they each
+> need the matching `--store` flag.
 
 Because the SQLite file lives on the persistent disk, **runs survive a
 redeploy**. SQLite also unlocks the cross-run stats endpoints (`/stats/*`).
