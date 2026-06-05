@@ -1,0 +1,79 @@
+id: distillation
+name: Multi-Model Distillation
+version: 0.1.0
+description: >
+  Distills a subject to its essence across four models (Claude, GPT, Mistral,
+  Gemini) in parallel, then synthesizes a consolidated distillation on Anthropic.
+  Runs twice (bounded recursion, depth 2): the second pass refines the first
+  pass's synthesis.
+recursion:
+  enabled: true
+  maxDepth: 2
+  carryForwardStrategy: synthesis_only
+# Pipeline-wide robustness: non-Anthropic OpenAI-compatible endpoints don't all
+# emit perfectly schema-valid JSON, so allow one schema-repair prompt and one
+# transient retry. Channels inherit these unless they override.
+defaults:
+  retry:
+    attempts: 1
+    backoffMs: 500
+    # 429/5xx/timeout are retried; missing-key and 4xx auth/bad-request are
+    # treated as non-retryable in the kernel (ChannelExecutor), so a missing
+    # API key fails fast instead of burning a pointless retry.
+    on: [provider_error, timeout]
+  repair:
+    attempts: 1
+providers:
+  - id: anthropic
+    type: anthropic
+    model: claude-opus-4-7
+    apiKeyEnv: ANTHROPIC_API_KEY
+    options:
+      maxTokens: 2048
+  - id: gpt
+    type: openai-compatible
+    model: gpt-4.1-mini
+    apiKeyEnv: OPENAI_API_KEY
+    # baseUrl omitted -> defaults to https://api.openai.com/v1
+  - id: mistral
+    type: openai-compatible
+    model: mistral-large-latest
+    baseUrl: https://api.mistral.ai/v1
+    apiKeyEnv: MISTRAL_API_KEY
+  - id: gemini
+    type: openai-compatible
+    model: gemini-2.0-flash
+    baseUrl: https://generativelanguage.googleapis.com/v1beta/openai
+    apiKeyEnv: GEMINI_API_KEY
+channels:
+  - id: distill_anthropic
+    name: Distillation (Claude)
+    executionMode: direct_provider
+    provider: anthropic
+    prompt: prompts/distillation/distill.md
+    outputSchema: schemas/distillation.channel.schema.json
+  - id: distill_gpt
+    name: Distillation (GPT)
+    executionMode: direct_provider
+    provider: gpt
+    prompt: prompts/distillation/distill.md
+    outputSchema: schemas/distillation.channel.schema.json
+  - id: distill_mistral
+    name: Distillation (Mistral)
+    executionMode: direct_provider
+    provider: mistral
+    prompt: prompts/distillation/distill.md
+    outputSchema: schemas/distillation.channel.schema.json
+  - id: distill_gemini
+    name: Distillation (Gemini)
+    executionMode: direct_provider
+    provider: gemini
+    prompt: prompts/distillation/distill.md
+    outputSchema: schemas/distillation.channel.schema.json
+synthesis:
+  id: synthesis
+  name: Distillation Synthesis
+  executionMode: direct_provider
+  provider: anthropic
+  prompt: prompts/distillation/synthesis.md
+  outputSchema: schemas/distillation.synthesis.schema.json

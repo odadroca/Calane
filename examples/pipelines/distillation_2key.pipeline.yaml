@@ -1,0 +1,53 @@
+id: distillation_2key
+name: Multi-Model Distillation (2-key test variant)
+version: 0.1.0
+description: >
+  A trimmed variant of `distillation` for testing with only MISTRAL_API_KEY and
+  GEMINI_API_KEY. Distills across Mistral + Gemini, then synthesizes on MISTRAL
+  (not Anthropic), so the whole run can complete end-to-end without Anthropic or
+  OpenAI keys. Gemini uses a free-tier-eligible model. Runs twice (depth 2).
+recursion:
+  enabled: true
+  maxDepth: 2
+  carryForwardStrategy: synthesis_only
+defaults:
+  retry:
+    attempts: 1
+    backoffMs: 500
+    on: [provider_error, timeout]
+  repair:
+    attempts: 1
+providers:
+  - id: mistral
+    type: openai-compatible
+    model: mistral-large-latest
+    baseUrl: https://api.mistral.ai/v1
+    apiKeyEnv: MISTRAL_API_KEY
+  - id: gemini
+    type: openai-compatible
+    # gemini-2.0-flash showed "limit: 0" on the free tier; 1.5-flash usually has
+    # free quota. If this still 429s, the project has no free-tier allocation at
+    # all -> enable billing or pick a model your account can call.
+    model: gemini-1.5-flash
+    baseUrl: https://generativelanguage.googleapis.com/v1beta/openai
+    apiKeyEnv: GEMINI_API_KEY
+channels:
+  - id: distill_mistral
+    name: Distillation (Mistral)
+    executionMode: direct_provider
+    provider: mistral
+    prompt: prompts/distillation/distill.md
+    outputSchema: schemas/distillation.channel.schema.json
+  - id: distill_gemini
+    name: Distillation (Gemini)
+    executionMode: direct_provider
+    provider: gemini
+    prompt: prompts/distillation/distill.md
+    outputSchema: schemas/distillation.channel.schema.json
+synthesis:
+  id: synthesis
+  name: Distillation Synthesis
+  executionMode: direct_provider
+  provider: mistral
+  prompt: prompts/distillation/synthesis.md
+  outputSchema: schemas/distillation.synthesis.schema.json
