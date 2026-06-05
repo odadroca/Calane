@@ -31,7 +31,7 @@ services:
       - key: PORT
         value: "8787"
       - key: NODE_VERSION
-        value: "20"
+        value: "22"
       # --- Persistent SQLite store on the mounted disk (survives redeploys) ---
       - key: CALANE_STORE_DRIVER
         value: sqlite
