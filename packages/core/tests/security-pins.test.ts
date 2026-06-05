@@ -32,9 +32,8 @@ describe("security: dependency pins (regression)", () => {
     // this pin >= 4.1.0 unconditionally.
     const { version, major, minor } = installedVersion("vitest");
     const safe = major > 4 || (major === 4 && minor >= 1);
-    expect(
-      safe,
-      `vitest installed at ${version}; must be >= 4.1.0 (GHSA-5xrq-8626-4rwp).`,
-    ).toBe(true);
+    expect(safe, `vitest installed at ${version}; must be >= 4.1.0 (GHSA-5xrq-8626-4rwp).`).toBe(
+      true,
+    );
   });
 });
